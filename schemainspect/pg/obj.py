@@ -1,7 +1,6 @@
+import textwrap
 from collections import OrderedDict as od
 from itertools import groupby
-
-from sqlalchemy import text
 
 from ..inspected import ColumnInfo, Inspected
 from ..inspected import InspectedSelectable as BaseInspectedSelectable
@@ -438,11 +437,22 @@ class InspectedIndex(Inspected, TableRelated):
 
     @property
     def drop_statement(self):
-        return "drop index if exists {};".format(self.quoted_full_name)
+        statement = "drop index if exists {};".format(self.quoted_full_name)
+
+        if self.is_exclusion_constraint:
+            return "select 1; " + textwrap.indent(statement, "-- ")
+        return statement
 
     @property
     def create_statement(self):
-        return "{};".format(self.definition)
+        statement = "{};".format(self.definition)
+        if self.is_exclusion_constraint:
+            return "select 1; " + textwrap.indent(statement, "-- ")
+        return statement
+
+    @property
+    def is_exclusion_constraint(self):
+        return self.constraint and self.constraint.constraint_type == "EXCLUDE"
 
     def __eq__(self, other):
         """
@@ -462,11 +472,9 @@ class InspectedIndex(Inspected, TableRelated):
             self.is_exclusion == other.is_exclusion,
             self.is_immediate == other.is_immediate,
             self.is_clustered == other.is_clustered,
-            self.key_collations == other.key_collations,
             self.key_expressions == other.key_expressions,
             self.partial_predicate == other.partial_predicate,
-            self.algorithm == other.algorithm
-            # self.constraint == other.constraint
+            self.algorithm == other.algorithm,
         )
         return all(equalities)
 
@@ -880,16 +888,39 @@ class InspectedConstraint(Inspected, TableRelated):
 
     @property
     def create_statement(self):
-        if self.index:
+        return self.get_create_statement(set_not_valid=False)
+
+    def get_create_statement(self, set_not_valid=False):
+        if self.index and self.constraint_type != "EXCLUDE":
             using_clause = "{} using index {}{}".format(
                 self.constraint_type, self.quoted_name, self.deferrable_subclause
             )
         else:
             using_clause = self.definition
 
+            if set_not_valid:
+                using_clause += " not valid"
+
         USING = "alter table {} add constraint {} {};"
 
         return USING.format(self.quoted_full_table_name, self.quoted_name, using_clause)
+
+    @property
+    def can_use_not_valid(self):
+        return self.constraint_type in ("CHECK", "FOREIGN KEY") and not self.index
+
+    @property
+    def validate_statement(self):
+        if self.can_use_not_valid:
+            VALIDATE = "alter table {} validate constraint {};"
+            return VALIDATE.format(self.quoted_full_table_name, self.quoted_name)
+
+    @property
+    def safer_create_statements(self):
+        if not self.can_use_not_valid:
+            return [self.create_statement]
+
+        return [self.get_create_statement(set_not_valid=True), self.validate_statement]
 
     @property
     def quoted_full_name(self):
@@ -1042,7 +1073,7 @@ class InspectedRowPolicy(Inspected, TableRelated):
         return all(equalities)
 
 
-PROPS = "schemas relations tables views functions selectables sequences constraints indexes enums extensions privileges collations triggers"
+PROPS = "schemas relations tables views functions selectables sequences constraints indexes enums extensions privileges collations triggers rlspolicies"
 
 
 class PostgreSQL(DBInspector):
@@ -1066,6 +1097,8 @@ class PostgreSQL(DBInspector):
                 q = q.replace("-- 10_AND_EARLIER", "")
 
             if not self.is_raw_psyco_connection:
+                from sqlalchemy import text
+
                 q = text(q)
 
             else:
@@ -1203,8 +1236,12 @@ class PostgreSQL(DBInspector):
             )
             self.selectables[x].dependent_on.append(x_dependent_on)
             self.selectables[x].dependent_on.sort()
-            self.selectables[x_dependent_on].dependents.append(x)
-            self.selectables[x_dependent_on].dependents.sort()
+
+            try:
+                self.selectables[x_dependent_on].dependents.append(x)
+                self.selectables[x_dependent_on].dependents.sort()
+            except LookupError:
+                pass
 
         for k, t in self.triggers.items():
             for dep_name in t.dependent_on:
@@ -1367,7 +1404,8 @@ class PostgreSQL(DBInspector):
                 quoted_full_name = "{}.{}".format(
                     quoted_identifier(schema), quoted_identifier(name)
                 )
-                return self.enums[quoted_full_name]
+
+                return self.enums.get(quoted_full_name)
 
             columns = [
                 ColumnInfo(
@@ -1383,6 +1421,7 @@ class PostgreSQL(DBInspector):
                     is_identity=c.is_identity,
                     is_identity_always=c.is_identity_always,
                     is_generated=c.is_generated,
+                    can_drop_generated=self.pg_version >= 13,
                 )
                 for c in clist
                 if c.position_number
