@@ -11,3 +11,4 @@ jobs:
 
     steps:
       - uses: python-semantic-release/python-semantic-release@v10.0.2
+      - uses: python-semantic-release/publish-action@v10.0.2

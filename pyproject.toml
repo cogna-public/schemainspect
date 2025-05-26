@@ -8,8 +8,6 @@ description = "Schema inspection for PostgreSQL (and possibly others)"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
-
-[tool.semantic_release]
 build_command = "python -m build --sdist --wheel ."
 
 [project.urls]
