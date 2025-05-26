@@ -1,14 +1,20 @@
 [project]
 name = "schemainspect"
-version = "3.1"
+version = "0.0.0"
 authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
 license = "Unlicense"
 readme = "README.md"
 description = "Schema inspection for PostgreSQL (and possibly others)"
 
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+
+[tool.semantic_release]
+build_command = "python -m build --sdist --wheel ."
+
 [project.urls]
-repository = "https://github.com/djrobstep/schemainspect"
-homepage = "https://github.com/djrobstep/schemainspect"
+repository = "https://github.com/philipwee/schemainspect"
+homepage = "https://github.com/philipwee/schemainspect"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
@@ -30,6 +36,7 @@ migra = "*"
 black = "22.3.0"
 toml = "*"
 python-dotenv = "^1.1.0"
+python-semantic-release = "^10.0.2"
 
 [tool.poetry.scripts]
 schemainspect = 'schemainspect:do_command'
