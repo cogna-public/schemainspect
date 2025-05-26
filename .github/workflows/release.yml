@@ -36,20 +36,20 @@ jobs:
         run: |
           git reset --hard ${{ github.sha }}
       
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: 3.13
       
-      - name: Setup Poetry
-        run: |
-          python -m pip install -U pip setuptools poetry
-          poetry config virtualenvs.create false
+      # - name: Setup Poetry
+      #   run: |
+      #     python -m pip install -U pip setuptools poetry
+      #     poetry config virtualenvs.create false
 
-      - name: Install deps
-        run: |
-          python -m venv ~/.virt
-          . ~/.virt/bin/activate
-          poetry install
+      # - name: Install deps
+      #   run: |
+      #     python -m venv ~/.virt
+      #     . ~/.virt/bin/activate
+      #     poetry install
 
       - name: Evaluate | Verify upstream has NOT changed
         # Last chance to abort before causing an error as another PR/push was applied to
@@ -93,7 +93,7 @@ jobs:
       - name: Action | Semantic Version Release
         id: release
         # Adjust tag with desired version if applicable.
-        uses: python-semantic-release/python-semantic-release@v10.0.2
+        uses: python-semantic-release/python-semantic-release@v8.3.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           git_committer_name: "github-actions"
