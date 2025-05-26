@@ -1,19 +1,24 @@
-[tool.poetry]
+[project]
 name = "schemainspect"
 version = "3.1"
-authors = ["Robert Lechte <robertlechte@gmail.com>"]
+authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
 license = "Unlicense"
 readme = "README.md"
 description = "Schema inspection for PostgreSQL (and possibly others)"
 
+[project.urls]
 repository = "https://github.com/djrobstep/schemainspect"
 homepage = "https://github.com/djrobstep/schemainspect"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4"
-sqlalchemy = "*"
+python = ">=3.9,<4"
+setuptools = "^80.8.0"
+sqlalchemy = "1.4.46"
 
-[tool.poetry.dev-dependencies]
+[tool.setuptools.packages.find]
+include = ["schemainspect"]
+
+[tool.poetry.group.dev.dependencies]
 sqlbag = ">=0.1.1616028516"
 pytest = "*"
 pytest-cov = "*"
@@ -24,6 +29,7 @@ isort = "5.10.1"
 migra = "*"
 black = "22.3.0"
 toml = "*"
+python-dotenv = "^1.1.0"
 
 [tool.poetry.scripts]
 schemainspect = 'schemainspect:do_command'
