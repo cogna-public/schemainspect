@@ -31,11 +31,11 @@ jobs:
         with:
           python-version: 3.13
 
-      - name: Wait for Postgres
-        run: until pg_isready -h localhost -U postgres -d app_db; do sleep 1; done
+      # - name: Wait for Postgres
+      #   run: until pg_isready -h localhost -U postgres -d app_db; do sleep 1; done
       
-      # - name: create postgres user
-      #   run: psql postgresql://@localhost/runner -c 'create role postgres'
+      - name: create postgres user
+        run: psql postgresql://runner@localhost/runner -c 'create role postgres'
 
       - name: Install system deps
         run: |
