@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.3 (2025-05-26)
+
+### Bug Fixes
+
+- Publish under new name
+  ([`7b31cb7`](https://github.com/PhilipWee/schemainspect/commit/7b31cb73ed8faa822197fb0bf2de53f3600c6a90))
+
+
 ## v1.0.2 (2025-05-26)
 
 
