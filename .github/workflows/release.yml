@@ -108,10 +108,14 @@ jobs:
 
       - name: Upload | Distribution Artifacts
         uses: actions/upload-artifact@v4
+        if: steps.release.outputs.released == 'true'
         with:
           name: distribution-artifacts
           path: dist
           if-no-files-found: error
+
+    outputs:
+      released: ${{ steps.release.outputs.released }}
 
   deploy:
     # 1. Separate out the deploy step from the publish step to run each step at
