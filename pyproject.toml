@@ -1,6 +1,6 @@
 [project]
 name = "schemainspect"
-version = "0.0.0"
+version = "1.0.0"
 authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
 license = "Unlicense"
 readme = "README.md"
