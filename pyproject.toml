@@ -8,7 +8,7 @@ description = "Schema inspection for PostgreSQL (and possibly others)"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
-build_command = "poetry build"
+build_command = "pip install poetry; poetry install; poetry build"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
