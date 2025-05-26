@@ -1754,7 +1754,7 @@ class PostgreSQL(DBInspector):
         """
 
         return (
-            type(self) == type(other)
+            type(self) is type(other)
             and self.schemas == other.schemas
             and self.relations == other.relations
             and self.sequences == other.sequences

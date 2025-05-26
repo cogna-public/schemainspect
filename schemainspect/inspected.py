@@ -314,7 +314,7 @@ class InspectedSelectable(Inspected):
 
     def __eq__(self, other):
         equalities = (
-            type(self) == type(other),
+            type(self) is type(other),
             self.relationtype == other.relationtype,
             self.name == other.name,
             self.schema == other.schema,
