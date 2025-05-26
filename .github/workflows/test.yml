@@ -16,6 +16,7 @@ jobs:
         image: postgres:${{ matrix.pg_version }}
         env:
           POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: app_db
         ports: ['5432:5432']
         options: >-
