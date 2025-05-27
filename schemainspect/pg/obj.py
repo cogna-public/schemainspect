@@ -119,7 +119,7 @@ class InspectedSelectable(BaseInspectedSelectable):
             colspec = ", ".join(c.creation_clause for c in self.columns.values())
             create_statement = "create type {} as ({});".format(n, colspec)
         else:
-            raise NotImplementedError  # pragma: no cover
+            create_statement = NotImplementedError
         return create_statement
 
     @property
@@ -134,7 +134,7 @@ class InspectedSelectable(BaseInspectedSelectable):
         elif self.relationtype == "c":
             drop_statement = "drop type {};".format(n)
         else:
-            raise NotImplementedError  # pragma: no cover
+            drop_statement = NotImplementedError
 
         return drop_statement
 
@@ -142,7 +142,7 @@ class InspectedSelectable(BaseInspectedSelectable):
         if self.is_alterable:
             alter = "alter table {} {};".format(self.quoted_full_name, clause)
         else:
-            raise NotImplementedError  # pragma: no cover
+            alter = NotImplementedError
 
         return alter
 
@@ -1227,6 +1227,10 @@ class PostgreSQL(DBInspector):
 
         self.deps = list(q)
 
+        print('deps',self.deps)
+        breakpoint()
+        # if (self.deps):
+
         for dep in self.deps:
             x = quoted_identifier(dep.name, dep.schema, dep.identity_arguments)
             x_dependent_on = quoted_identifier(
@@ -1554,6 +1558,7 @@ class PostgreSQL(DBInspector):
     def load_functions(self):
         self.functions = od()
         q = self.execute(self.FUNCTIONS_QUERY)
+
         for _, g in groupby(q, lambda x: (x.schema, x.name, x.identity_arguments)):
             clist = list(g)
             f = clist[0]
@@ -1614,6 +1619,7 @@ class PostgreSQL(DBInspector):
 
             identity_arguments = "({})".format(s.identity_arguments)
             self.functions[s.quoted_full_name + identity_arguments] = s
+            print(s)
 
     def load_triggers(self):
         q = self.execute(self.TRIGGERS_QUERY)
