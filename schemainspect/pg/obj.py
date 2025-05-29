@@ -1329,7 +1329,6 @@ class PostgreSQL(DBInspector):
                 dependent_on.append(x.parent_table)
 
             graph[k] = list(x.dependent_on)
-            
 
         if include_fk_deps:
             fk_deps = {}
