@@ -120,7 +120,7 @@ combined as (
   select distinct * from (
     select * from func_deps union
     select * from selectable_deps
-  )
+  ) as deps_union
 )
 select * from combined
 order by
