@@ -1227,10 +1227,6 @@ class PostgreSQL(DBInspector):
 
         self.deps = list(q)
 
-        print('deps',self.deps)
-        breakpoint()
-        # if (self.deps):
-
         for dep in self.deps:
             x = quoted_identifier(dep.name, dep.schema, dep.identity_arguments)
             x_dependent_on = quoted_identifier(
@@ -1246,6 +1242,20 @@ class PostgreSQL(DBInspector):
                 self.selectables[x_dependent_on].dependents.sort()
             except LookupError:
                 pass
+
+        for k, e in self.enums.items():
+            for dep in self.deps:
+                x = quoted_identifier(dep.name, dep.schema, dep.identity_arguments)
+                x_dependent_on = quoted_identifier(
+                    dep.name_dependent_on,
+                    dep.schema_dependent_on,
+                    dep.identity_arguments_dependent_on,
+                )
+
+                # if this enum is depended on
+                if x_dependent_on == k:
+                    e.dependents.append(x)
+                    e.dependents.sort()
 
         for k, t in self.triggers.items():
             for dep_name in t.dependent_on:
@@ -1319,6 +1329,7 @@ class PostgreSQL(DBInspector):
                 dependent_on.append(x.parent_table)
 
             graph[k] = list(x.dependent_on)
+            
 
         if include_fk_deps:
             fk_deps = {}
@@ -1619,7 +1630,6 @@ class PostgreSQL(DBInspector):
 
             identity_arguments = "({})".format(s.identity_arguments)
             self.functions[s.quoted_full_name + identity_arguments] = s
-            print(s)
 
     def load_triggers(self):
         q = self.execute(self.TRIGGERS_QUERY)
