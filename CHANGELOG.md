@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.0 (2025-05-30)
+
+### Features
+
+- Added comment metadata
+  ([`eeea98d`](https://github.com/PhilipWee/schemainspect/commit/eeea98d7a4313baee3256a7c230f259dda41b7fd))
+
+
 ## v1.0.4 (2025-05-29)
 
 ### Bug Fixes
