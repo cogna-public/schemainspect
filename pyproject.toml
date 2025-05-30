@@ -22,12 +22,12 @@ homepage = "https://github.com/philipwee/schemainspect"
 python = ">=3.9,<4"
 setuptools = "^80.8.0"
 sqlalchemy = "1.4.46"
+sqlbag= ">=0.1.1616028516"
 
 [tool.poetry]
 packages = [{ include = "schemainspect" }]
 
 [tool.poetry.group.dev.dependencies]
-sqlbag = ">=0.1.1616028516"
 pytest = "*"
 pytest-cov = "*"
 pytest-clarity = "*"

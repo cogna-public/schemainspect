@@ -16,6 +16,7 @@ from schemainspect import NullInspector, get_inspector, to_pytype
 from schemainspect.inspected import ColumnInfo
 from schemainspect.misc import quoted_identifier
 from schemainspect.pg.obj import (
+    InspectedComment,
     InspectedConstraint,
     InspectedEnum,
     InspectedExtension,
@@ -111,10 +112,17 @@ def test_basic_schemainspect():
     ]
     b.add_column_clause == 'add column "b"'
     b.drop_column_clause == 'drop column "b"'
-    with temporary_database("sqlite") as dburl:
-        with raises(NotImplementedError):
-            with S(dburl) as s:
-                get_inspector(s)
+    try:
+        with temporary_database("sqlite") as dburl:
+            with raises(NotImplementedError):
+                with S(dburl) as s:
+                    get_inspector(s)
+    except Exception as E:
+        if "WinError 32" in str(E):
+            # Ignore Windows permission error when closing temp DB
+            pass
+        else:
+            raise E
 
 
 def test_inspected():
@@ -214,6 +222,7 @@ def test_postgres_objects():
         "alter type \"schema\".\"name\" add value 'a1' after 'a';",
         "alter type \"schema\".\"name\" add value 'd' after 'c';",
     ]
+
     c = InspectedConstraint(
         constraint_type="PRIMARY KEY",
         definition="PRIMARY KEY (code)",
@@ -237,6 +246,37 @@ def test_postgres_objects():
     assert (
         c.drop_statement == 'alter table "public"."films" drop constraint "firstkey";'
     )
+
+def test_comments():
+    c = InspectedComment(
+        schema="public",
+        object_type="table",
+        object_name="films",
+        object_subname=None,
+        comment="films comment"
+    )
+    assert c.create_statement == 'comment on table "public"."films" is \'films comment\';'
+    assert c.drop_statement == 'comment on table "public"."films" is null;'
+
+    c2 = InspectedComment(
+        schema="public", 
+        object_type="column",
+        object_name="films",
+        object_subname="title",
+        comment="title comment"
+    )
+    assert c2.create_statement == 'comment on column "public"."films"."title" is \'title comment\';'
+    assert c2.drop_statement == 'comment on column "public"."films"."title" is null;'
+
+    c3 = InspectedComment(
+        schema="public",
+        object_type="function",
+        object_name="films_f",
+        object_subname="date, text, date",
+        comment="films_f comment"
+    )
+    assert c3.create_statement == 'comment on function "public"."films_f"(date, text, date) is \'films_f comment\';'
+    assert c3.drop_statement == 'comment on function "public"."films_f"(date, text, date) is null;'
 
 
 def setup_pg_schema(s):
