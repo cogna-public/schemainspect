@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.1 (2025-05-30)
+
+### Bug Fixes
+
+- Missing check for successful return
+  ([`ed7f81c`](https://github.com/PhilipWee/schemainspect/commit/ed7f81c7d62d57c0958681c77671048f3c801db7))
+
+### Chores
+
+- Linting ughhhh
+  ([`d23266c`](https://github.com/PhilipWee/schemainspect/commit/d23266c714fabaf5929350fb2cf42f47925d77a2))
+
+
 ## v1.1.0 (2025-05-30)
 
 ### Features
