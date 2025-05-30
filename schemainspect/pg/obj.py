@@ -1215,16 +1215,17 @@ class PostgreSQL(DBInspector):
     def load_comments(self):
         q = self.c.execute(self.COMMENTS_QUERY)
         comments: List[InspectedComment] = []
-        for c in q:
-            comments.append(
-                InspectedComment(
-                    schema=c.nspname,
-                    object_type=c.objtype,
-                    object_name=c.objname,
-                    object_subname=c.objsubname,
-                    comment=c.description,
+        if q:
+            for c in q:
+                comments.append(
+                    InspectedComment(
+                        schema=c.nspname,
+                        object_type=c.objtype,
+                        object_name=c.objname,
+                        object_subname=c.objsubname,
+                        comment=c.description,
+                    )
                 )
-            )
         self.comments = od((i.key, i) for i in comments)
 
     def load_schemas(self):
