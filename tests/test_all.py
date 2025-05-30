@@ -247,25 +247,31 @@ def test_postgres_objects():
         c.drop_statement == 'alter table "public"."films" drop constraint "firstkey";'
     )
 
+
 def test_comments():
     c = InspectedComment(
         schema="public",
         object_type="table",
         object_name="films",
         object_subname=None,
-        comment="films comment"
+        comment="films comment",
     )
-    assert c.create_statement == 'comment on table "public"."films" is \'films comment\';'
+    assert (
+        c.create_statement == 'comment on table "public"."films" is \'films comment\';'
+    )
     assert c.drop_statement == 'comment on table "public"."films" is null;'
 
     c2 = InspectedComment(
-        schema="public", 
+        schema="public",
         object_type="column",
         object_name="films",
         object_subname="title",
-        comment="title comment"
+        comment="title comment",
     )
-    assert c2.create_statement == 'comment on column "public"."films"."title" is \'title comment\';'
+    assert (
+        c2.create_statement
+        == 'comment on column "public"."films"."title" is \'title comment\';'
+    )
     assert c2.drop_statement == 'comment on column "public"."films"."title" is null;'
 
     c3 = InspectedComment(
@@ -273,10 +279,16 @@ def test_comments():
         object_type="function",
         object_name="films_f",
         object_subname="date, text, date",
-        comment="films_f comment"
+        comment="films_f comment",
     )
-    assert c3.create_statement == 'comment on function "public"."films_f"(date, text, date) is \'films_f comment\';'
-    assert c3.drop_statement == 'comment on function "public"."films_f"(date, text, date) is null;'
+    assert (
+        c3.create_statement
+        == 'comment on function "public"."films_f"(date, text, date) is \'films_f comment\';'
+    )
+    assert (
+        c3.drop_statement
+        == 'comment on function "public"."films_f"(date, text, date) is null;'
+    )
 
 
 def setup_pg_schema(s):

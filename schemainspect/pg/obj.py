@@ -244,39 +244,32 @@ class InspectedComment(Inspected):
         self.comment = comment
 
     def get_full_ident_name(self):
-        if self.object_type == 'column':
+        if self.object_type == "column":
             return "{}.{}".format(
                 quoted_identifier(self.object_name, self.schema),
                 quoted_identifier(self.object_subname),
             )
-        if self.object_type == 'function':
+        if self.object_type == "function":
             return "{}({})".format(
-                quoted_identifier(self.object_name, self.schema),
-                self.object_subname
+                quoted_identifier(self.object_name, self.schema), self.object_subname
             )
         return quoted_identifier(self.object_name, self.schema)
 
     @property
     def drop_statement(self):
         return "comment on {} {} is null;".format(
-            self.object_type,
-            self.get_full_ident_name()
+            self.object_type, self.get_full_ident_name()
         )
 
     @property
     def create_statement(self):
         return "comment on {} {} is '{}';".format(
-            self.object_type,
-            self.get_full_ident_name(),
-            self.comment
+            self.object_type, self.get_full_ident_name(), self.comment
         )
 
     @property
     def key(self):
-        return '{}:{}'.format(
-            self.object_type,
-            self.get_full_ident_name()
-        )
+        return "{}:{}".format(self.object_type, self.get_full_ident_name())
 
     def __eq__(self, other):
         return (
@@ -1229,7 +1222,7 @@ class PostgreSQL(DBInspector):
                     object_type=c.objtype,
                     object_name=c.objname,
                     object_subname=c.objsubname,
-                    comment=c.description
+                    comment=c.description,
                 )
             )
         self.comments = od((i.key, i) for i in comments)
