@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.2 (2025-06-02)
+
+### Bug Fixes
+
+- Missing function call for ident name
+  ([`2389777`](https://github.com/PhilipWee/schemainspect/commit/238977785d6edfae763f7d268c4b51d3bb3cd9a1))
+
+
 ## v1.1.1 (2025-05-30)
 
 ### Bug Fixes
