@@ -242,6 +242,12 @@ class InspectedComment(Inspected):
         self.object_name = object_name
         self.object_subname = object_subname
         self.comment = comment
+    
+    @property 
+    def name(self):
+        if self.object_subname is None:
+            return f"{self.object_type}_{self.object_name}"
+        return f"{self.object_type}_{self.object_name}_{self.object_subname}"
 
     def get_full_ident_name(self):
         if self.object_type == "column":
@@ -273,7 +279,7 @@ class InspectedComment(Inspected):
 
     def __eq__(self, other):
         return (
-            self.get_full_ident_name == other.get_full_ident_name
+            self.get_full_ident_name() == other.get_full_ident_name()
             and self.object_type == other.object_type
             and self.comment == other.comment
         )
