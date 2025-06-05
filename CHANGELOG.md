@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.2.0 (2025-06-05)
+
+### Features
+
+- Allow exclude multiple schemas
+  ([`2062fc7`](https://github.com/PhilipWee/schemainspect/commit/2062fc7c8e328a75157a4b6c73f9ffdc542ae0f1))
+
+
 ## v1.1.2 (2025-06-02)
 
 ### Bug Fixes
