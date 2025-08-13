@@ -6,6 +6,8 @@ from .misc import AutoRepr, quoted_identifier, unquoted_identifier
 class Inspected(AutoRepr):
     @property
     def quoted_full_name(self):
+        if self.schema == "":
+            return quoted_identifier(self.name)        
         return quoted_identifier(self.name, schema=self.schema)
 
     @property
@@ -314,7 +316,7 @@ class InspectedSelectable(Inspected):
 
     def __eq__(self, other):
         equalities = (
-            type(self) == type(other),
+            type(self) is type(other),
             self.relationtype == other.relationtype,
             self.name == other.name,
             self.schema == other.schema,

@@ -55,3 +55,4 @@ Install with [pip](https://pip.pypa.io):
 To install psycopg2 (the PostgreSQL driver) at the same time as well:
 
     $ pip install schemainspect[pg]
+

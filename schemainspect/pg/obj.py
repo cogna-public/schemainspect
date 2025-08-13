@@ -1,6 +1,7 @@
 import textwrap
 from collections import OrderedDict as od
 from itertools import groupby
+from typing import List
 
 from ..inspected import ColumnInfo, Inspected
 from ..inspected import InspectedSelectable as BaseInspectedSelectable
@@ -24,6 +25,7 @@ INDEXES_QUERY = resource_text("sql/indexes.sql")
 SEQUENCES_QUERY = resource_text("sql/sequences.sql")
 CONSTRAINTS_QUERY = resource_text("sql/constraints.sql")
 FUNCTIONS_QUERY = resource_text("sql/functions.sql")
+COMMENTS_QUERY = resource_text("sql/comments.sql")
 TYPES_QUERY = resource_text("sql/types.sql")
 DOMAINS_QUERY = resource_text("sql/domains.sql")
 EXTENSIONS_QUERY = resource_text("sql/extensions.sql")
@@ -119,7 +121,7 @@ class InspectedSelectable(BaseInspectedSelectable):
             colspec = ", ".join(c.creation_clause for c in self.columns.values())
             create_statement = "create type {} as ({});".format(n, colspec)
         else:
-            raise NotImplementedError  # pragma: no cover
+            create_statement = NotImplementedError
         return create_statement
 
     @property
@@ -134,7 +136,7 @@ class InspectedSelectable(BaseInspectedSelectable):
         elif self.relationtype == "c":
             drop_statement = "drop type {};".format(n)
         else:
-            raise NotImplementedError  # pragma: no cover
+            drop_statement = NotImplementedError
 
         return drop_statement
 
@@ -142,7 +144,7 @@ class InspectedSelectable(BaseInspectedSelectable):
         if self.is_alterable:
             alter = "alter table {} {};".format(self.quoted_full_name, clause)
         else:
-            raise NotImplementedError  # pragma: no cover
+            alter = NotImplementedError
 
         return alter
 
@@ -231,6 +233,56 @@ class InspectedSelectable(BaseInspectedSelectable):
     def alter_unlogged_statement(self):
         keyword = "unlogged" if self.is_unlogged else "logged"
         return self.alter_table_statement("set {}".format(keyword))
+
+
+class InspectedComment(Inspected):
+    def __init__(self, schema, object_type, object_name, object_subname, comment):
+        self.schema = schema
+        self.object_type = object_type
+        self.object_name = object_name
+        self.object_subname = object_subname
+        self.comment = comment
+    
+    @property 
+    def name(self):
+        if self.object_subname is None:
+            return f"{self.object_type}_{self.object_name}"
+        return f"{self.object_type}_{self.object_name}_{self.object_subname}"
+
+    def get_full_ident_name(self):
+        if self.object_type == "column":
+            return "{}.{}".format(
+                quoted_identifier(self.object_name, self.schema),
+                quoted_identifier(self.object_subname),
+            )
+        if self.object_type == "function":
+            return "{}({})".format(
+                quoted_identifier(self.object_name, self.schema), self.object_subname
+            )
+        return quoted_identifier(self.object_name, self.schema)
+
+    @property
+    def drop_statement(self):
+        return "comment on {} {} is null;".format(
+            self.object_type, self.get_full_ident_name()
+        )
+
+    @property
+    def create_statement(self):
+        return "comment on {} {} is '{}';".format(
+            self.object_type, self.get_full_ident_name(), self.comment
+        )
+
+    @property
+    def key(self):
+        return "{}:{}".format(self.object_type, self.get_full_ident_name())
+
+    def __eq__(self, other):
+        return (
+            self.get_full_ident_name() == other.get_full_ident_name()
+            and self.object_type == other.object_type
+            and self.comment == other.comment
+        )
 
 
 class InspectedFunction(InspectedSelectable):
@@ -1073,7 +1125,7 @@ class InspectedRowPolicy(Inspected, TableRelated):
         return all(equalities)
 
 
-PROPS = "schemas relations tables views functions selectables sequences constraints indexes enums extensions privileges collations triggers rlspolicies"
+PROPS = "schemas relations tables views functions selectables sequences constraints indexes comments enums extensions privileges collations triggers rlspolicies"
 
 
 class PostgreSQL(DBInspector):
@@ -1126,6 +1178,7 @@ class PostgreSQL(DBInspector):
         self.SEQUENCES_QUERY = processed(SEQUENCES_QUERY)
         self.CONSTRAINTS_QUERY = processed(CONSTRAINTS_QUERY)
         self.FUNCTIONS_QUERY = processed(FUNCTIONS_QUERY)
+        self.COMMENTS_QUERY = processed(COMMENTS_QUERY)
         self.TYPES_QUERY = processed(TYPES_QUERY)
         self.DOMAINS_QUERY = processed(DOMAINS_QUERY)
         self.EXTENSIONS_QUERY = processed(EXTENSIONS_QUERY)
@@ -1149,6 +1202,7 @@ class PostgreSQL(DBInspector):
         self.load_schemas()
         self.load_all_relations()
         self.load_functions()
+        self.load_comments()
         self.selectables = od()
         self.selectables.update(self.relations)
         self.selectables.update(self.composite_types)
@@ -1163,6 +1217,22 @@ class PostgreSQL(DBInspector):
 
         self.load_deps()
         self.load_deps_all()
+
+    def load_comments(self):
+        q = self.c.execute(self.COMMENTS_QUERY)
+        comments: List[InspectedComment] = []
+        if q:
+            for c in q:
+                comments.append(
+                    InspectedComment(
+                        schema=c.nspname,
+                        object_type=c.objtype,
+                        object_name=c.objname,
+                        object_subname=c.objsubname,
+                        comment=c.description,
+                    )
+                )
+        self.comments = od((i.key, i) for i in comments)
 
     def load_schemas(self):
         q = self.execute(self.SCHEMAS_QUERY)
@@ -1242,6 +1312,20 @@ class PostgreSQL(DBInspector):
                 self.selectables[x_dependent_on].dependents.sort()
             except LookupError:
                 pass
+
+        for k, e in self.enums.items():
+            for dep in self.deps:
+                x = quoted_identifier(dep.name, dep.schema, dep.identity_arguments)
+                x_dependent_on = quoted_identifier(
+                    dep.name_dependent_on,
+                    dep.schema_dependent_on,
+                    dep.identity_arguments_dependent_on,
+                )
+
+                # if this enum is depended on
+                if x_dependent_on == k:
+                    e.dependents.append(x)
+                    e.dependents.sort()
 
         for k, t in self.triggers.items():
             for dep_name in t.dependent_on:
@@ -1554,6 +1638,7 @@ class PostgreSQL(DBInspector):
     def load_functions(self):
         self.functions = od()
         q = self.execute(self.FUNCTIONS_QUERY)
+
         for _, g in groupby(q, lambda x: (x.schema, x.name, x.identity_arguments)):
             clist = list(g)
             f = clist[0]
@@ -1754,7 +1839,7 @@ class PostgreSQL(DBInspector):
         """
 
         return (
-            type(self) == type(other)
+            type(self) is type(other)
             and self.schemas == other.schemas
             and self.relations == other.relations
             and self.sequences == other.sequences

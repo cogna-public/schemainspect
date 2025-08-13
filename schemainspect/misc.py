@@ -1,7 +1,11 @@
 import inspect
 from reprlib import recursive_repr
 
-from pkg_resources import resource_stream as pkg_resource_stream
+# Python <3.9 compatibility
+try:
+    from importlib import resources as impresources
+except ImportError:
+    import importlib_resources as impresources
 
 
 def connection_from_s_or_c(s_or_c):  # pragma: no cover
@@ -70,11 +74,13 @@ def external_caller():
     return next(name for name in names if name != __name__)
 
 
-def resource_stream(subpath):
+def resource_text(subpath: str) -> str:
     module_name = external_caller()
-    return pkg_resource_stream(module_name, subpath)
-
-
-def resource_text(subpath):
-    with resource_stream(subpath) as f:
-        return f.read().decode("utf-8")
+    try:
+        path = impresources.files(module_name) / subpath
+        with path.open("r", encoding="utf-8") as f:
+            return f.read()
+    except AttributeError:
+        # Fallback for Python < 3.9
+        with impresources.open_text(module_name, subpath, encoding="utf-8") as f:
+            return f.read()
