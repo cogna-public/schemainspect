@@ -42,5 +42,5 @@ select
 from pg_authid
 where
   rolsuper = false
-  and rolname not like 'pg_%'
+  and rolname !~ '^pg_'
 order by rolname;
