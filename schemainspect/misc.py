@@ -78,9 +78,19 @@ def resource_text(subpath: str) -> str:
     module_name = external_caller()
     try:
         path = impresources.files(module_name) / subpath
-        with path.open("r", encoding="utf-8") as f:
-            return f.read()
+    except TypeError:
+        package_name = module_name.rsplit(".", 1)[0]
+        path = impresources.files(package_name) / subpath
     except AttributeError:
         # Fallback for Python < 3.9
         with impresources.open_text(module_name, subpath, encoding="utf-8") as f:
+            return f.read()
+
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        package_name = module_name.rsplit(".", 1)[0]
+        path = impresources.files(package_name) / subpath
+        with path.open("r", encoding="utf-8") as f:
             return f.read()

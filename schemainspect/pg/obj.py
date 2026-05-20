@@ -33,6 +33,7 @@ ENUMS_QUERY = resource_text("sql/enums.sql")
 DEPS_QUERY = resource_text("sql/deps.sql")
 PRIVILEGES_QUERY = resource_text("sql/privileges.sql")
 TRIGGERS_QUERY = resource_text("sql/triggers.sql")
+RULES_QUERY = resource_text("sql/rules.sql")
 COLLATIONS_QUERY = resource_text("sql/collations.sql")
 COLLATIONS_QUERY_9 = resource_text("sql/collations9.sql")
 RLSPOLICIES_QUERY = resource_text("sql/rlspolicies.sql")
@@ -244,8 +245,8 @@ class InspectedComment(Inspected):
         self.object_name = object_name
         self.object_subname = object_subname
         self.comment = comment
-    
-    @property 
+
+    @property
     def name(self):
         if self.object_subname is None:
             return f"{self.object_type}_{self.object_name}"
@@ -441,6 +442,71 @@ class InspectedTrigger(Inspected):
             and self.table_name == other.table_name
             and self.proc_schema == other.proc_schema
             and self.proc_name == other.proc_name
+            and self.enabled == other.enabled
+            and self.full_definition == other.full_definition
+        )
+
+
+class InspectedRule(Inspected, TableRelated):
+    def __init__(self, name, schema, table_name, enabled, full_definition):
+        self.name = name
+        self.schema = schema
+        self.table_name = table_name
+        self.enabled = enabled
+        self.full_definition = full_definition
+
+        self.dependent_on = [self.quoted_full_selectable_name]
+        self.dependents = []
+
+    @property
+    def signature(self):
+        return self.quoted_full_name
+
+    @property
+    def quoted_full_name(self):
+        return "{}.{}.{}".format(
+            quoted_identifier(self.schema),
+            quoted_identifier(self.table_name),
+            quoted_identifier(self.name),
+        )
+
+    @property
+    def quoted_full_selectable_name(self):
+        return "{}.{}".format(
+            quoted_identifier(self.schema), quoted_identifier(self.table_name)
+        )
+
+    @property
+    def drop_statement(self):
+        return "drop rule if exists {} on {};".format(
+            self.quoted_name, self.quoted_full_table_name
+        )
+
+    @property
+    def create_statement(self):
+        definition = self.full_definition.rstrip()
+        if not definition.endswith(";"):
+            definition = definition + ";"
+
+        status_sql = {
+            "O": "ENABLE RULE",
+            "D": "DISABLE RULE",
+            "R": "ENABLE REPLICA RULE",
+            "A": "ENABLE ALWAYS RULE",
+        }
+        if self.enabled in ("D", "R", "A"):
+            alter = "ALTER TABLE {} {} {};".format(
+                self.quoted_full_table_name, status_sql[self.enabled], self.quoted_name
+            )
+            return definition + "\n" + alter
+
+        return definition
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name
+            and self.schema == other.schema
+            and self.table_name == other.table_name
             and self.enabled == other.enabled
             and self.full_definition == other.full_definition
         )
@@ -1127,7 +1193,9 @@ class InspectedRowPolicy(Inspected, TableRelated):
         return all(equalities)
 
 
-PROPS = "schemas relations tables views functions selectables sequences constraints indexes comments enums extensions privileges collations triggers rlspolicies"
+PROPS = "schemas relations tables views functions selectables sequences constraints indexes comments enums extensions privileges collations triggers rules rlspolicies"
+
+
 class InspectedRole(Inspected):
     def __init__(self, name, superuser, createdb, inherit, login, replication, bypassrls,
                  connection_limit, password, valid_until):
@@ -1285,6 +1353,7 @@ class PostgreSQL(DBInspector):
         self.SCHEMAS_QUERY = processed(SCHEMAS_QUERY)
         self.PRIVILEGES_QUERY = processed(PRIVILEGES_QUERY)
         self.TRIGGERS_QUERY = processed(TRIGGERS_QUERY)
+        self.RULES_QUERY = processed(RULES_QUERY)
         self.ROLES_QUERY = processed(ROLES_QUERY)
         self.MEMBERSHIPS_QUERY = processed(MEMBERSHIPS_QUERY)
         super(PostgreSQL, self).__init__(c, include_internal)
@@ -1309,6 +1378,7 @@ class PostgreSQL(DBInspector):
 
         self.load_privileges()
         self.load_triggers()
+        self.load_rules()
         self.load_collations()
         self.load_rlspolicies()
         self.load_types()
@@ -1853,6 +1923,20 @@ class PostgreSQL(DBInspector):
         ]  # type: list[InspectedTrigger]
         self.triggers = od((t.signature, t) for t in triggers)
 
+    def load_rules(self):
+        q = self.execute(self.RULES_QUERY)
+        rules = [
+            InspectedRule(
+                i.name,
+                i.schema,
+                i.table_name,
+                i.enabled,
+                i.full_definition,
+            )
+            for i in q
+        ]  # type: list[InspectedRule]
+        self.rules = od((r.signature, r) for r in rules)
+
     def load_types(self):
         q = self.execute(self.TYPES_QUERY)
 
@@ -1985,6 +2069,7 @@ class PostgreSQL(DBInspector):
             and self.extensions == other.extensions
             and self.functions == other.functions
             and self.triggers == other.triggers
+            and self.rules == other.rules
             and self.collations == other.collations
             and self.rlspolicies == other.rlspolicies
         )
