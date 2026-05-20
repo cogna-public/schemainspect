@@ -26,6 +26,7 @@ SEQUENCES_QUERY = resource_text("sql/sequences.sql")
 CONSTRAINTS_QUERY = resource_text("sql/constraints.sql")
 FUNCTIONS_QUERY = resource_text("sql/functions.sql")
 COMMENTS_QUERY = resource_text("sql/comments.sql")
+SECURITY_LABELS_QUERY = resource_text("sql/securitylabels.sql")
 TYPES_QUERY = resource_text("sql/types.sql")
 DOMAINS_QUERY = resource_text("sql/domains.sql")
 EXTENSIONS_QUERY = resource_text("sql/extensions.sql")
@@ -285,6 +286,58 @@ class InspectedComment(Inspected):
             self.get_full_ident_name() == other.get_full_ident_name()
             and self.object_type == other.object_type
             and self.comment == other.comment
+        )
+
+
+class InspectedSecurityLabel(Inspected):
+    def __init__(self, schema, object_type, object_identity, provider, label):
+        self.schema = schema
+        self.object_type = object_type
+        self.object_identity = object_identity
+        self.provider = provider
+        self.label = label
+
+    @property
+    def name(self):
+        return "{}_{}_{}".format(
+            self.provider, self.object_type, self.object_identity
+        )
+
+    @property
+    def key(self):
+        return "{}:{}:{}".format(
+            self.provider, self.object_type, self.object_identity
+        )
+
+    @property
+    def provider_name(self):
+        return quoted_identifier(self.provider)
+
+    @property
+    def quoted_label(self):
+        return "'{}'".format(self.label.replace("'", "''"))
+
+    @property
+    def drop_statement(self):
+        return "security label for {} on {} {} is null;".format(
+            self.provider_name, self.object_type, self.object_identity
+        )
+
+    @property
+    def create_statement(self):
+        return "security label for {} on {} {} is {};".format(
+            self.provider_name,
+            self.object_type,
+            self.object_identity,
+            self.quoted_label,
+        )
+
+    def __eq__(self, other):
+        return (
+            self.object_type == other.object_type
+            and self.object_identity == other.object_identity
+            and self.provider == other.provider
+            and self.label == other.label
         )
 
 
@@ -1193,7 +1246,7 @@ class InspectedRowPolicy(Inspected, TableRelated):
         return all(equalities)
 
 
-PROPS = "schemas relations tables views functions selectables sequences constraints indexes comments enums extensions privileges collations triggers rules rlspolicies"
+PROPS = "schemas relations tables views functions selectables sequences constraints indexes comments securitylabels enums extensions privileges collations triggers rules rlspolicies"
 
 
 class InspectedRole(Inspected):
@@ -1345,6 +1398,7 @@ class PostgreSQL(DBInspector):
         self.CONSTRAINTS_QUERY = processed(CONSTRAINTS_QUERY)
         self.FUNCTIONS_QUERY = processed(FUNCTIONS_QUERY)
         self.COMMENTS_QUERY = processed(COMMENTS_QUERY)
+        self.SECURITY_LABELS_QUERY = processed(SECURITY_LABELS_QUERY)
         self.TYPES_QUERY = processed(TYPES_QUERY)
         self.DOMAINS_QUERY = processed(DOMAINS_QUERY)
         self.EXTENSIONS_QUERY = processed(EXTENSIONS_QUERY)
@@ -1371,6 +1425,7 @@ class PostgreSQL(DBInspector):
         self.load_all_relations()
         self.load_functions()
         self.load_comments()
+        self.load_securitylabels()
         self.selectables = od()
         self.selectables.update(self.relations)
         self.selectables.update(self.composite_types)
@@ -1404,6 +1459,22 @@ class PostgreSQL(DBInspector):
                     )
                 )
         self.comments = od((i.key, i) for i in comments)
+
+    def load_securitylabels(self):
+        q = self.c.execute(self.SECURITY_LABELS_QUERY)
+        securitylabels: List[InspectedSecurityLabel] = []
+        if q:
+            for label in q:
+                securitylabels.append(
+                    InspectedSecurityLabel(
+                        schema=label.schema,
+                        object_type=label.object_type,
+                        object_identity=label.object_identity,
+                        provider=label.provider,
+                        label=label.label,
+                    )
+                )
+        self.securitylabels = od((i.key, i) for i in securitylabels)
 
     def load_schemas(self):
         q = self.execute(self.SCHEMAS_QUERY)
@@ -2068,6 +2139,7 @@ class PostgreSQL(DBInspector):
             and self.constraints == other.constraints
             and self.extensions == other.extensions
             and self.functions == other.functions
+            and self.securitylabels == other.securitylabels
             and self.triggers == other.triggers
             and self.rules == other.rules
             and self.collations == other.collations
