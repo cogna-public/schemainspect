@@ -272,9 +272,13 @@ class InspectedComment(Inspected):
         )
 
     @property
+    def quoted_comment(self):
+        return "'{}'".format(self.comment.replace("'", "''"))
+
+    @property
     def create_statement(self):
-        return "comment on {} {} is '{}';".format(
-            self.object_type, self.get_full_ident_name(), self.comment
+        return "comment on {} {} is {};".format(
+            self.object_type, self.get_full_ident_name(), self.quoted_comment
         )
 
     @property
@@ -299,15 +303,11 @@ class InspectedSecurityLabel(Inspected):
 
     @property
     def name(self):
-        return "{}_{}_{}".format(
-            self.provider, self.object_type, self.object_identity
-        )
+        return "{}_{}_{}".format(self.provider, self.object_type, self.object_identity)
 
     @property
     def key(self):
-        return "{}:{}:{}".format(
-            self.provider, self.object_type, self.object_identity
-        )
+        return "{}:{}:{}".format(self.provider, self.object_type, self.object_identity)
 
     @property
     def provider_name(self):
@@ -1250,8 +1250,19 @@ PROPS = "schemas relations tables views functions selectables sequences constrai
 
 
 class InspectedRole(Inspected):
-    def __init__(self, name, superuser, createdb, inherit, login, replication, bypassrls,
-                 connection_limit, password, valid_until):
+    def __init__(
+        self,
+        name,
+        superuser,
+        createdb,
+        inherit,
+        login,
+        replication,
+        bypassrls,
+        connection_limit,
+        password,
+        valid_until,
+    ):
         self.name = name
         self.superuser = superuser
         self.createdb = createdb
@@ -1278,7 +1289,7 @@ class InspectedRole(Inspected):
             self.replication,
             self.bypassrls,
             self.connection_limit,
-            ("'" + self.password + "'") if self.password else 'NULL',
+            ("'" + self.password + "'") if self.password else "NULL",
             " valid until {}".format(self.valid_until) if self.valid_until else "",
         )
 
@@ -1293,7 +1304,7 @@ class InspectedRole(Inspected):
             self.replication,
             self.bypassrls,
             self.connection_limit,
-            ("'" + self.password + "'") if self.password else 'NULL',
+            ("'" + self.password + "'") if self.password else "NULL",
             " valid until {}".format(self.valid_until) if self.valid_until else "",
         )
 
@@ -1323,15 +1334,15 @@ class InspectedMembership(Inspected):
     @property
     def create_statement(self):
         return "grant {} to {} {} granted by {};".format(
-            self.roleid, self.member,
-            " with admin option " if self.admin_option else "", self.grantor
+            self.roleid,
+            self.member,
+            " with admin option " if self.admin_option else "",
+            self.grantor,
         )
 
     @property
     def drop_statement(self):
-        return "revoke {} from {};".format(
-            self.roleid, self.member
-        )
+        return "revoke {} from {};".format(self.roleid, self.member)
 
     @property
     def key(self):

@@ -1,6 +1,6 @@
 [project]
 name = "schema-inspect-maintained"
-version = "1.2.2"
+version = "1.2.3"
 authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
 license = "Unlicense"
 readme = "README.md"

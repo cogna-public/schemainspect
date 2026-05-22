@@ -291,6 +291,20 @@ def test_comments():
     )
 
 
+def test_comment_escapes_literals():
+    c = InspectedComment(
+        schema="public",
+        object_type="table",
+        object_name="schemes",
+        object_subname=None,
+        comment="scheme's description",
+    )
+    assert (
+        c.create_statement
+        == "comment on table \"public\".\"schemes\" is 'scheme''s description';"
+    )
+
+
 def setup_pg_schema(s):
     s.execute("create table emptytable()")
     s.execute("comment on table emptytable is 'emptytable comment'")
