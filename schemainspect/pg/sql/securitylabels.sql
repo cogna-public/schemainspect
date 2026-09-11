@@ -17,6 +17,7 @@ from pg_catalog.pg_seclabels l
 left join pg_catalog.pg_namespace n on n.oid = l.objnamespace
 where l.objtype in (
     'aggregate',
+    'column',
     'domain',
     'foreign table',
     'function',
