@@ -1,4 +1,4 @@
-from schemainspect.pg.obj import InspectedSecurityLabel, SECURITY_LABELS_QUERY
+from schemainspect.pg.obj import SECURITY_LABELS_QUERY, InspectedSecurityLabel
 
 
 def test_security_label_statements():
@@ -57,3 +57,11 @@ def test_security_label_query_includes_shared_role_labels():
     assert "pg_catalog.pg_shseclabel" in SECURITY_LABELS_QUERY
     assert "'role' as object_type" in SECURITY_LABELS_QUERY
     assert "pg_catalog.pg_authid" in SECURITY_LABELS_QUERY
+
+
+def test_security_label_query_filters_column_labels():
+    # pg_seclabels reports column labels with objtype 'column', not
+    # 'table column'. Omitting it from the objtype filter drops every
+    # column security label from inspection.
+    objtype_filter = SECURITY_LABELS_QUERY.split("where", 1)[1]
+    assert "'column'" in objtype_filter
