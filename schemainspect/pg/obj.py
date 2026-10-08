@@ -1456,7 +1456,7 @@ class PostgreSQL(DBInspector):
         self.load_deps_all()
 
     def load_comments(self):
-        q = self.c.execute(self.COMMENTS_QUERY)
+        q = self.execute(self.COMMENTS_QUERY)
         comments: List[InspectedComment] = []
         if q:
             for c in q:
@@ -1472,7 +1472,7 @@ class PostgreSQL(DBInspector):
         self.comments = od((i.key, i) for i in comments)
 
     def load_securitylabels(self):
-        q = self.c.execute(self.SECURITY_LABELS_QUERY)
+        q = self.execute(self.SECURITY_LABELS_QUERY)
         securitylabels: List[InspectedSecurityLabel] = []
         if q:
             for label in q:
@@ -1516,7 +1516,7 @@ class PostgreSQL(DBInspector):
         self.rlspolicies = od((p.key, p) for p in rlspolicies)
 
     def load_roles(self):
-        q = self.c.execute(self.ROLES_QUERY)
+        q = self.execute(self.ROLES_QUERY)
 
         roles = [
             InspectedRole(
@@ -1537,7 +1537,7 @@ class PostgreSQL(DBInspector):
         self.roles = od((r.name, r) for r in roles)
 
     def load_memberships(self):
-        q = self.c.execute(self.MEMBERSHIPS_QUERY)
+        q = self.execute(self.MEMBERSHIPS_QUERY)
 
         memberships = [
             InspectedMembership(
