@@ -6,10 +6,6 @@ license = "Unlicense"
 readme = "README.md"
 description = "Schema inspection for PostgreSQL (and possibly others)"
 
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-build_command = "pip install poetry; poetry install; poetry build"
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -37,7 +33,6 @@ migra = "*"
 black = "22.3.0"
 toml = "*"
 python-dotenv = "^1.1.0"
-python-semantic-release = "^10.0.2"
 
 [tool.poetry.scripts]
 schemainspect = 'schemainspect:do_command'
