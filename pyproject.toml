@@ -1,18 +1,18 @@
 [project]
 name = "cogna-schemainspect"
 version = "1.2.3"
-authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
+authors = [{ name = "Cogna Co", email = "info@cogna.co" }]
 license = "Unlicense"
 readme = "README.md"
-description = "Schema inspection for PostgreSQL (and possibly others)"
+description = "Schema inspection for PostgreSQL (and possibly others). Public fork for cogna changes."
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project.urls]
-repository = "https://github.com/philipwee/schemainspect"
-homepage = "https://github.com/philipwee/schemainspect"
+repository = "https://github.com/cogna-public/schemainspect"
+homepage = "https://github.com/cogna-public/schemainspect"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
