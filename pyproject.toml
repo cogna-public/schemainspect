@@ -1,6 +1,6 @@
 [project]
 name = "cogna-schemainspect"
-version = "1.2.3"
+version = "1.2.4"
 authors = [{ name = "Cogna Co", email = "info@cogna.co" }]
 license = "Unlicense"
 readme = "README.md"
