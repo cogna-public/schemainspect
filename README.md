@@ -6,6 +6,15 @@ Inspects tables, views, materialized views, constraints, indexes, sequences, enu
 
 **Limitations:** Function inspection only confirmed to work with SQL/PLPGSQL languages so far.
 
+## Installing
+
+Cogna publishes this fork to PyPI as `cogna-schemainspect`. It installs the same top-level `schemainspect` package as `schemainspect` and `schema-inspect-maintained`, so installing it alongside either one overwrites files, and uninstalling one breaks the other. Uninstall them first:
+
+    pip uninstall schemainspect schema-inspect-maintained
+    pip install cogna-schemainspect
+
+For a schema diff tool built on it, install `cogna-migra` rather than upstream `migra`, which depends on upstream `schemainspect`.
+
 ## Basic Usage
 
 Get an inspection object from an already opened SQLAlchemy session or connection as follows:
@@ -55,4 +64,3 @@ Install with [pip](https://pip.pypa.io):
 To install psycopg2 (the PostgreSQL driver) at the same time as well:
 
     $ pip install schemainspect[pg]
-

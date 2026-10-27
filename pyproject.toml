@@ -1,22 +1,20 @@
 [project]
-name = "schema-inspect-maintained"
+name = "cogna-schemainspect"
 version = "1.2.3"
-authors = [{ name = "Robert Lechte", email = "robertlechte@gmail.com" }]
+authors = [{ name = "Cogna Co", email = "info@cogna.co" }]
 license = "Unlicense"
 readme = "README.md"
-description = "Schema inspection for PostgreSQL (and possibly others)"
-
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-build_command = "pip install poetry; poetry install; poetry build"
+description = "Schema inspection for PostgreSQL (and possibly others). Public fork for cogna changes."
+# Read from [tool.poetry.dependencies]
+dynamic = ["dependencies", "requires-python"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project.urls]
-repository = "https://github.com/philipwee/schemainspect"
-homepage = "https://github.com/philipwee/schemainspect"
+repository = "https://github.com/cogna-public/schemainspect"
+homepage = "https://github.com/cogna-public/schemainspect"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
@@ -37,7 +35,6 @@ migra = "*"
 black = "22.3.0"
 toml = "*"
 python-dotenv = "^1.1.0"
-python-semantic-release = "^10.0.2"
 
 [tool.poetry.scripts]
 schemainspect = 'schemainspect:do_command'

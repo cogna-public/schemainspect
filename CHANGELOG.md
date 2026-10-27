@@ -1,6 +1,6 @@
 # CHANGELOG
 
-<!-- version list -->
+From v1.2.4 the package is published to PyPI as `cogna-schemainspect` (previously `schema-inspect-maintained`), and releases are recorded in [GitHub Releases](https://github.com/cogna-public/schemainspect/releases). `.github/workflows/auto-version.yml` bumps the patch version on every merge to `master`, or the minor or major version when the PR title contains `[minor]` or `[major]`.
 
 ## v1.2.0 (2025-06-05)
 
