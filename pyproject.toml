@@ -5,6 +5,8 @@ authors = [{ name = "Cogna Co", email = "info@cogna.co" }]
 license = "Unlicense"
 readme = "README.md"
 description = "Schema inspection for PostgreSQL (and possibly others). Public fork for cogna changes."
+# Read from [tool.poetry.dependencies]
+dynamic = ["dependencies", "requires-python"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
